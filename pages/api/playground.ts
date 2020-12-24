@@ -54,9 +54,7 @@ type TResponseResolver<TResponseData> = (
   ctx: Context,
 ) => PromiseLike<ResolverResponse<TResponseData>>;
 
-function endpoint<TResponseData>(obj: {
-  resolve: TResponseResolver<TResponseData>;
-}) {
+function endpoint<TResponseData>(resolve: TResponseResolver<TResponseData>) {
   const handler: NextApiHandler<TResponseShape<TResponseData>> = async (
     req,
     res,
@@ -66,7 +64,7 @@ function endpoint<TResponseData>(obj: {
         req,
         res,
       };
-      const { data, statusCode = 200 } = await obj.resolve(ctx);
+      const { data, statusCode = 200 } = await resolve(ctx);
 
       res.status(statusCode).json({ data });
     } catch (_err) {
@@ -98,4 +96,4 @@ const resolve: InferGetDataFunction<typeof exec> = async () => {
 
 export type PlaygroundResponse = FunctionThenArg<typeof resolve>;
 
-export default endpoint({ resolve });
+export default endpoint(resolve);
