@@ -21,8 +21,8 @@ const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerS
 )
 
 export const getServerSideProps = async () => {
-  const url = process.env.VERCEL_URL ?? 'http://localhost:3000'
-  const res = await fetch(`${url}/api/users`)
+  const baseUrl = `https://${process.env.VERCEL_URL}` ?? 'http://localhost:3000'
+  const res = await fetch(`${baseUrl}/api/users`)
   const data: GetUsersResponse = await res.json()
   return {
     props: {
