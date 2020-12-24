@@ -1,4 +1,5 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
+import { FunctionThenArg } from '../../types/typeUtils';
 
 type Context = {
   req: NextApiRequest;
@@ -49,60 +50,52 @@ type TResponseShape<TResponseData> =
       data: TResponseData;
     };
 
-function endpoint<TInput, TResolvedInput, TResponseData>(obj: {
-  input: (
-    input: TInput,
-    ctx: Context,
-  ) => PromiseLike<TResolvedInput> | TResolvedInput;
-  resolve(
-    input: TResolvedInput,
-    ctx: Context,
-  ): PromiseLike<ResolverResponse<TResponseData>>;
+type TResponseResolver<TResponseData> = (
+  ctx: Context,
+) => PromiseLike<ResolverResponse<TResponseData>>;
+
+function endpoint<TResponseData>(obj: {
+  resolve: TResponseResolver<TResponseData>;
 }) {
   const handler: NextApiHandler<TResponseShape<TResponseData>> = async (
     req,
     res,
   ) => {
-    let resolvedInput: TResolvedInput;
-    const ctx = {
-      req,
-      res,
-    };
     try {
-      resolvedInput = await obj.input(req.body, ctx);
-    } catch (_err) {
-      const err = getError(_err, 400);
-      res.status(err.statusCode).send(err);
-      return;
-    }
+      const ctx = {
+        req,
+        res,
+      };
+      const { data, statusCode = 200 } = await obj.resolve(ctx);
 
-    try {
-      const { data, statusCode = 200 } = await obj.resolve(resolvedInput!, ctx);
       res.status(statusCode).json({ data });
-    } catch (err) {
-      res.status(500).json({
-        statusCode: 500,
-        message: err.message,
-      });
-      return;
+    } catch (_err) {
+      const err = getError(_err, 500);
+      res.status(err.statusCode).json(err);
     }
   };
 
   return handler;
 }
 
-export default endpoint({
-  input() {
-    return {
-      foo: 'bar',
-    };
-  },
-  async resolve(input, ctx) {
-    return {
-      data: {
-        input,
-        hello: 'world',
-      },
-    };
-  },
-});
+type InferGetDataFunction<T extends Function> = TResponseResolver<
+  FunctionThenArg<T>
+>;
+
+// above is "framework"
+// below is the actual function
+async function exec() {
+  return {
+    foo: 'bar',
+  };
+}
+const resolve: InferGetDataFunction<typeof exec> = async () => {
+  const data = await exec();
+  return {
+    data,
+  };
+};
+
+export type PlaygroundResponse = FunctionThenArg<typeof resolve>;
+
+export default endpoint({ resolve });

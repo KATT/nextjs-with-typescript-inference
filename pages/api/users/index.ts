@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import { ThenArg } from '../../../types/typeUtils';
 
 async function getResponse() {
