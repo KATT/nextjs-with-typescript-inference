@@ -1,12 +1,9 @@
 import * as React from 'react'
+import { GetUsersResponse } from '../pages/api/users'
 import ListItem from './ListItem'
-import { User } from '../interfaces'
 
-type Props = {
-  items: User[]
-}
 
-const List = ({ items }: Props) => (
+const List = ({ items }: { items: GetUsersResponse }) => (
   <ul>
     {items.map((item) => (
       <li key={item.id}>
