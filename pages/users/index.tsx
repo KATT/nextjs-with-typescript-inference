@@ -1,4 +1,4 @@
-import { InferGetServerSidePropsType } from 'next'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import Layout from '../../components/Layout'
 import List from '../../components/List'
@@ -20,7 +20,7 @@ const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerS
   </Layout>
 )
 
-export const getServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async () => {
   const baseUrl = `https://${process.env.VERCEL_URL}` ?? 'http://localhost:3000'
   const res = await fetch(`${baseUrl}/api/users`)
   const data: GetUsersResponse = await res.json()

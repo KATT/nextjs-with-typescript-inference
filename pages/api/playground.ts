@@ -1,12 +1,24 @@
-import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
+import { IncomingMessage, ServerResponse } from 'http';
+import {
+  GetServerSideProps,
+  GetServerSidePropsContext,
+  GetServerSidePropsResult,
+  NextApiHandler,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
 import { FunctionThenArg } from '../../types/typeUtils';
 
+export type TRequest = IncomingMessage & {
+  cookies?: { [key: string]: any };
+};
+export type TResponse = ServerResponse;
+
 type Context = {
-  req: NextApiRequest;
-  res: NextApiResponse;
+  req: TRequest;
 };
 
-type ResolverResponse<TResponseData> = {
+type TResolverResponse<TResponseData> = {
   data: TResponseData;
   statusCode?: number;
 };
@@ -52,9 +64,11 @@ type TResponseShape<TResponseData> =
 
 type TResponseResolver<TResponseData> = (
   ctx: Context,
-) => PromiseLike<ResolverResponse<TResponseData>>;
+) => PromiseLike<TResolverResponse<TResponseData>>;
 
-function endpoint<TResponseData>(resolve: TResponseResolver<TResponseData>) {
+function endpointHandler<TResponseData>(
+  resolve: TResponseResolver<TResponseData>,
+) {
   const handler: NextApiHandler<TResponseShape<TResponseData>> = async (
     req,
     res,
@@ -76,24 +90,50 @@ function endpoint<TResponseData>(resolve: TResponseResolver<TResponseData>) {
   return handler;
 }
 
+async function ssrHandler<TResponseData>(
+  resolve: TResponseResolver<TResponseData>,
+  ctx: Context,
+) {
+  const { data } = await resolve(ctx);
+
+  return {
+    props: {
+      data,
+    },
+  };
+}
+
 type InferGetDataFunction<T extends Function> = TResponseResolver<
   FunctionThenArg<T>
 >;
 
+export function makeSSRFunctions<TResponseData>(
+  resolve: TResponseResolver<TResponseData>,
+) {
+  return {
+    async getServerSideProps(ctx: GetServerSidePropsContext) {
+      return ssrHandler(resolve, {
+        req: ctx.req,
+      });
+    },
+    resolve,
+  };
+}
+
 // above is "framework"
 // below is the actual function
-async function exec() {
+async function playgroundDataFetcher() {
   return {
     foo: 'bar',
   };
 }
-const resolve: InferGetDataFunction<typeof exec> = async () => {
-  const data = await exec();
+export const playgroundResolver: InferGetDataFunction<
+  typeof playgroundDataFetcher
+> = async () => {
+  const data = await playgroundDataFetcher();
   return {
     data,
   };
 };
 
-export type PlaygroundResponse = FunctionThenArg<typeof resolve>;
-
-export default endpoint(resolve);
+export default endpointHandler(playgroundResolver);

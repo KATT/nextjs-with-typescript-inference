@@ -1,16 +1,25 @@
-import Link from 'next/link'
+import { InferGetServerSidePropsType } from 'next'
 import Layout from '../components/Layout'
+import { makeSSRFunctions, playgroundResolver } from './api/playground'
 
-const AboutPage = () => (
-  <Layout title="About | Next.js + TypeScript Example">
-    <h1>About</h1>
-    <p>This is the about page</p>
-    <p>
-      <Link href="/">
-        <a>Go home</a>
-      </Link>
-    </p>
-  </Layout>
-)
+const ssr = makeSSRFunctions(playgroundResolver)
 
-export default AboutPage
+const PlaygroundPage = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  return (
+    <Layout title="Playground">
+      <h1>Playground</h1>
+      <h2>From props:</h2>
+      <pre>{JSON.stringify(props, null, 4)}</pre>
+      <p>test type safety: {props.data.foo}</p>
+    </Layout>
+  )
+}
+
+
+export const getServerSideProps = async (ctx: any) => {
+  return ssr.getServerSideProps(ctx)
+}
+
+
+
+export default PlaygroundPage
