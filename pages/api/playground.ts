@@ -1,4 +1,4 @@
-import { endpointHandler, InferGetDataFunction } from '../../blite/blite';
+import { endpointHandler, InferGetDataFunction } from '../../blite/server';
 
 async function playgroundDataFetcher() {
   return {

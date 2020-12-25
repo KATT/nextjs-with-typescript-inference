@@ -1,12 +1,14 @@
-import { IncomingMessage, ServerResponse } from 'http';
-import { GetServerSidePropsContext, NextApiHandler } from 'next';
+import { ServerResponse } from 'http';
+import {
+  GetServerSidePropsContext,
+  NextApiHandler,
+  NextApiRequest,
+} from 'next';
 import { serialize } from 'superjson';
 import { SuperJSONResult } from 'superjson/dist/types';
 import { FunctionThenArg } from '../types/typeUtils';
 
-export type TRequest = IncomingMessage & {
-  cookies?: { [key: string]: any };
-};
+export type TRequest = NextApiRequest;
 export type TResponse = ServerResponse;
 
 type RequestContext = {
@@ -112,17 +114,19 @@ export function makeSSRFunctions<TResponseData>(
   return {
     async getServerSideProps(ctx: GetServerSidePropsContext) {
       return ssrHandler(resolve, {
-        req: ctx.req,
+        req: ctx.req as any, // fixme,
       });
     },
     resolve,
   };
 }
 
-export function assertOnServer() {
+export function assertOnServer(desc?: string) {
   if (typeof window !== 'undefined') {
-    throw new Error('Triggered server-only function');
+    throw new Error(
+      'Imported server-only functionality on client' + desc ? ` (${desc})` : '',
+    );
   }
 }
 
-export const BliteContext = {};
+assertOnServer('server.ts');

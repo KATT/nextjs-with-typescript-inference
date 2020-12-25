@@ -1,18 +1,13 @@
-import { endpointHandler, InferGetDataFunction } from '../../../blite/blite';
+import { endpointHandler, InferGetDataFunction } from '../../../blite/server';
+import { createUser } from '../db';
 
-async function playgroundDataFetcher() {
-  return {
-    foo: 'bar',
-  };
-}
-
-export const playgroundResolver: InferGetDataFunction<
-  typeof playgroundDataFetcher
-> = async () => {
-  const data = await playgroundDataFetcher();
+export const createUserResolver: InferGetDataFunction<
+  typeof createUser
+> = async (ctx) => {
+  const data = await createUser(ctx.req.body);
   return {
     data,
   };
 };
 
-export default endpointHandler(playgroundResolver);
+export default endpointHandler(createUserResolver);

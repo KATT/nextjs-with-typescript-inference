@@ -1,6 +1,6 @@
 import { InferGetServerSidePropsType } from 'next'
 import { useQuery } from 'react-query'
-import { makeSSRFunctions } from '../blite/blite'
+import { makeSSRFunctions } from '../blite/server'
 import Layout from '../components/Layout'
 import { FunctionThenArg } from '../types/typeUtils'
 import { playgroundResolver } from './api/playground'

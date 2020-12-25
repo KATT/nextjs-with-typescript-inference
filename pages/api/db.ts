@@ -1,33 +1,44 @@
 // Mock db
 import * as z from 'zod';
-import { assertOnServer } from '../../blite/blite';
+import { v4 } from 'uuid';
+import { createUserSchema, createUserSchemaType } from '../../types/schemas';
+
 const DB = {
   users: [
-    { id: 1, name: 'Alice' },
-    { id: 2, name: 'Bob' },
-    { id: 3, name: 'Caroline' },
-    { id: 4, name: 'Dave' },
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Alice',
+      createdAt: new Date(2020, 12, 24),
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      name: 'Bob',
+      createdAt: new Date(2020, 12, 24),
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000003',
+      name: 'Caroline',
+      createdAt: new Date(2020, 12, 24),
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000004',
+      name: 'Dave',
+      createdAt: new Date(2020, 12, 24),
+    },
   ],
 };
-
-let nextUserId = 5;
+type User = typeof DB.users[number];
 
 export async function getAllUsers() {
-  return {
-    users: DB.users,
-    date: new Date(),
-  };
+  return DB.users;
 }
 
-export const addUserSchema = z.object({
-  name: z.string().min(1),
-});
-
-export async function addUser(user: z.infer<typeof addUserSchema>) {
-  const input = addUserSchema.parse(user);
-  const instance = {
+export async function createUser(user: createUserSchemaType) {
+  const input = createUserSchema.parse(user);
+  const instance: User = {
     ...input,
-    id: nextUserId++,
+    id: v4(),
+    createdAt: new Date(),
   };
   DB.users.push(instance);
 
