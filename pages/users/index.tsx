@@ -1,8 +1,8 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import Layout from '../../components/Layout'
 import List from '../../components/List'
-import { GetUsersResponse } from '../api/users'
+import { getAllUsers } from '../api/db'
 
 const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) => (
   <Layout title="Users List | Next.js + TypeScript Example">
@@ -20,13 +20,10 @@ const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerS
   </Layout>
 )
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const baseUrl = `https://${process.env.VERCEL_URL}` ?? 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/users`)
-  const data: GetUsersResponse = await res.json()
+export const getServerSideProps = async () => {
   return {
     props: {
-      data,
+      data: await getAllUsers()
     }
   }
 }

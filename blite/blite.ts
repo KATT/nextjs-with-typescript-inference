@@ -1,19 +1,19 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { GetServerSidePropsContext, NextApiHandler } from 'next';
-import { FunctionThenArg } from '../../types/typeUtils';
+import { FunctionThenArg } from '../types/typeUtils';
 
 export type TRequest = IncomingMessage & {
   cookies?: { [key: string]: any };
 };
 export type TResponse = ServerResponse;
 
-type Context = {
+type RequestContext = {
   req: TRequest;
 };
 
 type TResolverResponse<TResponseData> = {
-  data: TResponseData;
   statusCode?: number;
+  data: TResponseData;
 };
 
 type TErrorResponse = {
@@ -56,12 +56,15 @@ type TResponseShape<TResponseData> =
     };
 
 type TResponseResolver<TResponseData> = (
-  ctx: Context,
+  ctx: RequestContext,
 ) => PromiseLike<TResolverResponse<TResponseData>>;
 
 export function endpointHandler<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
 ) {
+  if (typeof window !== 'undefined') {
+    throw new Error('You have imported an endpoint handler in the client');
+  }
   const handler: NextApiHandler<TResponseShape<TResponseData>> = async (
     req,
     res,
@@ -85,7 +88,7 @@ export function endpointHandler<TResponseData>(
 
 async function ssrHandler<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
-  ctx: Context,
+  ctx: RequestContext,
 ) {
   const { data } = await resolve(ctx);
 
@@ -103,6 +106,7 @@ export type InferGetDataFunction<T extends Function> = TResponseResolver<
 export function makeSSRFunctions<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
 ) {
+  assertOnServer();
   return {
     async getServerSideProps(ctx: GetServerSidePropsContext) {
       return ssrHandler(resolve, {
@@ -112,3 +116,11 @@ export function makeSSRFunctions<TResponseData>(
     resolve,
   };
 }
+
+export function assertOnServer() {
+  if (typeof window !== 'undefined') {
+    throw new Error('Triggered server-only function');
+  }
+}
+
+export const BliteContext = {};
