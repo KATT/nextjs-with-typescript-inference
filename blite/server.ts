@@ -20,11 +20,11 @@ type TResolverResponse<TResponseData> = {
   data: TResponseData;
 };
 
-type TErrorResponse = {
+export interface TErrorData {
   statusCode: number;
   message: string;
   stack?: string;
-};
+}
 
 type ErrorWithExtras = Error & {
   statusCode?: unknown;
@@ -43,20 +43,20 @@ function parseIntOrNull(input: unknown) {
   return null;
 }
 
-function getError(
-  err: ErrorWithExtras,
-  defaultStatusCode = 500,
-): TErrorResponse {
+function getError(err: ErrorWithExtras, defaultStatusCode = 500): TErrorData {
   return {
     message: err.message,
     statusCode: parseIntOrNull(err.statusCode) ?? defaultStatusCode,
   };
 }
-
-type TResponseShape<TResponseData> =
-  | TErrorResponse
+export type TResponseShape =
   | {
-      data: TResponseData;
+      ok: true;
+      data: SuperJSONResult;
+    }
+  | {
+      ok: false;
+      error: TErrorData;
     };
 
 type TResponseResolver<TResponseData> = (
@@ -66,13 +66,8 @@ type TResponseResolver<TResponseData> = (
 export function endpointHandler<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
 ) {
-  if (typeof window !== 'undefined') {
-    throw new Error('You have imported an endpoint handler in the client');
-  }
-  const handler: NextApiHandler<TResponseShape<SuperJSONResult>> = async (
-    req,
-    res,
-  ) => {
+  assertOnServer('endpointHandler');
+  const handler: NextApiHandler<TResponseShape> = async (req, res) => {
     try {
       const ctx = {
         req,
@@ -80,10 +75,13 @@ export function endpointHandler<TResponseData>(
       };
       const { data, statusCode = 200 } = await resolve(ctx);
 
-      res.status(statusCode).json({ data: serialize(data) });
+      res.status(statusCode).json({ ok: true, data: serialize(data) });
     } catch (_err) {
-      const err = getError(_err, 500);
-      res.status(err.statusCode).json(err);
+      const error = getError(_err, 500);
+      res.status(error.statusCode).json({
+        ok: false,
+        error,
+      });
     }
   };
 

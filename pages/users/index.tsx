@@ -1,39 +1,10 @@
 import { InferGetServerSidePropsType } from 'next'
 import { useRouter } from 'next/dist/client/router'
-import { useEffect, useState } from 'react'
-import { deserialize } from 'superjson'
-import { SuperJSONResult } from 'superjson/dist/types'
+import { useState } from 'react'
+import { jsonPost } from '../../blite/client'
 import Layout from '../../components/Layout'
 import { createUserSchemaType } from '../../types/schemas'
 import { getAllUsers } from '../api/db'
-
-
-function useStateFromProp<TProp>(props: TProp) {
-  const [state, setState] = useState(props)
-
-  useEffect(() => {
-    // reset on prop change
-    setState(props)
-  }, [props])
-
-  return [state, setState] as const
-}
-
-async function jsonPost<TBody, TResponse = unknown>(opts: {
-  body: TBody,
-  path: string,
-}) {
-  const res = await fetch(opts.path, {
-    method: 'post',
-    body: JSON.stringify(opts.body),
-    headers: {
-      'content-type': 'application/json',
-    }
-  })
-  const json: SuperJSONResult = await res.json()
-
-  return deserialize(json) as TResponse;
-}
 
 function AddUserForm() {
   const router = useRouter()
@@ -47,10 +18,13 @@ function AddUserForm() {
       console.log('sending', { name })
       setSubmitting(true)
       await jsonPost<createUserSchemaType>({
-        path: '/api/users',
+        path: '/api/users/create',
         body: { name },
       })
-      await router.replace(router.pathname, undefined) // "reload" page to get new data
+      await router.replace({
+        pathname: router.pathname,
+        query: router.query,
+      }) // "reload" page to get new data
       console.log('done')
       setName('')
       setSubmitting(false)
@@ -63,8 +37,6 @@ function AddUserForm() {
 
 
 export default function UsersIndexPage({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [users] = useStateFromProp(data.users)
-
   return (
     <Layout title="Users List | Next.js + TypeScript Example">
       <h1>Users List</h1>
@@ -74,7 +46,7 @@ export default function UsersIndexPage({ data }: InferGetServerSidePropsType<typ
       <p>You are currently on: /users</p>
       <table>
         <tbody>
-          {users.map(user => <tr key={user.id}>
+          {data.users.map(user => <tr key={user.id}>
             <td>{user.id}</td>
             <td>{user.name}</td>
             <td>{user.createdAt.toLocaleDateString('sv-SE')} {user.createdAt.toLocaleTimeString('sv-SE')}</td>
@@ -89,7 +61,6 @@ export default function UsersIndexPage({ data }: InferGetServerSidePropsType<typ
   )
 }
 export const getServerSideProps = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500)) // simulate loading
   return {
     props: {
       data: {
