@@ -1,7 +1,5 @@
 import { InferGetServerSidePropsType } from 'next'
-import Link from 'next/link'
 import Layout from '../../components/Layout'
-import List from '../../components/List'
 import { getAllUsers } from '../api/db'
 
 const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) => (
@@ -11,12 +9,8 @@ const WithStaticProps = ({ data }: InferGetServerSidePropsType<typeof getServerS
       Example fetching data from inside <code>getStaticProps()</code>.
     </p>
     <p>You are currently on: /users</p>
-    <List items={data} />
-    <p>
-      <Link href="/">
-        <a>Go home</a>
-      </Link>
-    </p>
+    <pre>{JSON.stringify(data, null, 4)}</pre>
+    <pre>Date is Date? {data.date instanceof Date ? 'yes' : 'no'}</pre>
   </Layout>
 )
 

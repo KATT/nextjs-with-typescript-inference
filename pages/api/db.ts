@@ -13,7 +13,10 @@ const DB = {
 let nextUserId = 5;
 
 export async function getAllUsers() {
-  return DB.users;
+  return {
+    users: DB.users,
+    date: new Date(),
+  };
 }
 
 export const addUserSchema = z.object({

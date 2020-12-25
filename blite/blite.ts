@@ -1,5 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { GetServerSidePropsContext, NextApiHandler } from 'next';
+import { serialize } from 'superjson';
+import { SuperJSONResult } from 'superjson/dist/types';
 import { FunctionThenArg } from '../types/typeUtils';
 
 export type TRequest = IncomingMessage & {
@@ -65,7 +67,7 @@ export function endpointHandler<TResponseData>(
   if (typeof window !== 'undefined') {
     throw new Error('You have imported an endpoint handler in the client');
   }
-  const handler: NextApiHandler<TResponseShape<TResponseData>> = async (
+  const handler: NextApiHandler<TResponseShape<SuperJSONResult>> = async (
     req,
     res,
   ) => {
@@ -76,7 +78,7 @@ export function endpointHandler<TResponseData>(
       };
       const { data, statusCode = 200 } = await resolve(ctx);
 
-      res.status(statusCode).json({ data });
+      res.status(statusCode).json({ data: serialize(data) });
     } catch (_err) {
       const err = getError(_err, 500);
       res.status(err.statusCode).json(err);
