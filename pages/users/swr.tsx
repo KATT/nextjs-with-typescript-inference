@@ -1,10 +1,10 @@
-import { InferGetServerSidePropsType } from 'next';
 import { useRouter } from 'next/dist/client/router';
-import { useState } from 'react';
-import { jsonPost } from '../../blite/client';
+import { Suspense, useState } from 'react';
+import { jsonPost, useAPI } from '../../blite/client';
 import { PageContent, PageHeader } from '../../components/Layout';
+import NoSSR from '../../components/NoSSR';
 import { createUserSchemaType } from '../../types/schemas';
-import { getAllUsers } from '../api/db';
+import { User } from '../../types/typeUtils';
 
 function AddUserForm() {
   const router = useRouter();
@@ -48,47 +48,27 @@ function AddUserForm() {
   );
 }
 
-export default function UsersIndexPage({
-  data,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+function SWRComponent() {
+  const data = useAPI<User[]>('/api/users');
+  return <pre className='text-xs'>{JSON.stringify(data, null, 4)}</pre>;
+}
+
+export default function UsersIndexPage() {
   return (
     <>
       <PageHeader>Users</PageHeader>
       <PageContent>
-        <h1>Users List</h1>
-        <p>
-          Example fetching data from inside <code>getStaticProps()</code>.
-        </p>
-        <p>You are currently on: /users</p>
-        <table>
-          <tbody>
-            {data.users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>
-                  {user.createdAt.toLocaleDateString('sv-SE')}{' '}
-                  {user.createdAt.toLocaleTimeString('sv-SE')}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <pre>{JSON.stringify(data, null, 4)}</pre>
-        <hr />
+        <h2 className='text-xl font-bold'>Using SWR</h2>
+
+        <NoSSR>
+          <Suspense fallback={<div className='italic'>Loading</div>}>
+            <SWRComponent />
+          </Suspense>
+        </NoSSR>
+        <hr className='my-4' />
         <h2>Add user</h2>
         <AddUserForm />
       </PageContent>
     </>
   );
 }
-export const getServerSideProps = async () => {
-  // await new Promise((resolve) => setTimeout(resolve, 1000));
-  return {
-    props: {
-      data: {
-        users: await getAllUsers(),
-      },
-    },
-  };
-};

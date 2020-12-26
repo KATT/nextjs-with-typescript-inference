@@ -73,8 +73,9 @@ export function endpointHandler<TResponseData>(
         req,
         res,
       };
-      const { data, statusCode = 200 } = await resolve(ctx);
 
+      const { data, statusCode = 200 } = await resolve(ctx);
+      // res.setHeader('cache-control', 's-maxage=60, stale-while-revalidate');
       res.status(statusCode).json({ ok: true, data: serialize(data) });
     } catch (_err) {
       const error = getError(_err, 500);

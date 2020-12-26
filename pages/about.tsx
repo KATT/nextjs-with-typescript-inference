@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { Footer, PageContent, PageHeader } from '../components/Layout';
 
 const AboutPage = () => (
@@ -12,6 +13,7 @@ const AboutPage = () => (
         </Link>
       </p>
     </PageContent>
+    {/* <Suspense fallback={null}>suspense test</Suspense> */}
     <Footer />
   </>
 );

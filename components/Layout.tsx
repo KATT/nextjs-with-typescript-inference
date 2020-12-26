@@ -5,8 +5,10 @@ import { ReactNode } from 'react';
 const routes: [string, string][] = [
   ['/', 'Home'],
   ['/about', 'About'],
-  ['/users', 'Users'],
+  ['/users/swr', 'SWR'],
+  ['/users/ssr', 'SSR'],
   ['/playground', 'Playground'],
+  ['/posts', 'Form'],
 ];
 export const Header = () => {
   const router = useRouter();
