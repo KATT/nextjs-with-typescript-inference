@@ -11,10 +11,10 @@ const routes: [string, string][] = [
 export const Header = () => {
   const router = useRouter();
   return (
-    <div className='bg-indigo-600 pb-32'>
-      <nav className='bg-indigo-600 border-b border-indigo-300 border-opacity-25 lg:border-none'>
+    <div className='bg-green-600 pb-32'>
+      <nav className='bg-green-600 border-b border-green-300 border-opacity-25 lg:border-none'>
         <div className='max-w-7xl mx-auto px-2 sm:px-4 lg:px-8'>
-          <div className='relative h-16 flex items-center justify-between lg:border-b lg:border-indigo-400 lg:border-opacity-25'>
+          <div className='relative h-16 flex items-center justify-between lg:border-b lg:border-green-400 lg:border-opacity-25'>
             <div className='px-2 flex items-center lg:px-0'>
               <div className='flex-shrink-0'>
                 <img
@@ -25,15 +25,15 @@ export const Header = () => {
               </div>
               <div className='hidden lg:block lg:ml-10'>
                 <div className='flex space-x-4'>
-                  {/* Current: "bg-indigo-700 text-white", Default: "text-white hover:bg-indigo-500 hover:bg-opacity-75" */}
+                  {/* Current: "bg-green-700 text-white", Default: "text-white hover:bg-green-500 hover:bg-opacity-75" */}
                   {routes.map(([to, title]) => (
                     <Link href={to} key={to}>
                       <a
                         key={to}
                         className={
                           to === router.asPath
-                            ? 'bg-indigo-700 text-white rounded-md py-2 px-3 text-sm font-medium'
-                            : 'text-white hover:bg-indigo-500 hover:bg-opacity-75 rounded-md py-2 px-3 text-sm font-medium'
+                            ? 'bg-green-700 text-white rounded-md py-2 px-3 text-sm font-medium'
+                            : 'text-white hover:bg-green-500 hover:bg-opacity-75 rounded-md py-2 px-3 text-sm font-medium'
                         }
                       >
                         {title}
