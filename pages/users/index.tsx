@@ -83,6 +83,7 @@ export default function UsersIndexPage({
   );
 }
 export const getServerSideProps = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   return {
     props: {
       data: {
