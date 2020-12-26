@@ -1,5 +1,4 @@
 import { deserialize } from 'superjson';
-import { SuperJSONResult } from 'superjson/dist/types';
 import { TResponseShape } from './server';
 import { BliteError } from './shared';
 
@@ -22,5 +21,5 @@ export async function jsonPost<TBody, TResponse = unknown>(opts: {
     };
   }
   console.error('Error response:', json);
-  throw new BliteError(json.error.statusCode, json.error.message);
+  throw new BliteError(json.error);
 }
