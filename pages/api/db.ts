@@ -1,7 +1,7 @@
 // Mock db
-import * as z from 'zod';
 import { v4 } from 'uuid';
 import { createUserSchema, createUserSchemaType } from '../../types/schemas';
+import { User } from '../../types/typeUtils';
 
 const DB = {
   users: [
@@ -27,7 +27,6 @@ const DB = {
     },
   ],
 };
-type User = typeof DB.users[number];
 
 export async function getAllUsers() {
   return DB.users;

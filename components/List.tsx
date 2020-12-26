@@ -1,9 +1,8 @@
-import * as React from 'react'
-import { GetUsersResponse } from '../pages/api/users'
-import ListItem from './ListItem'
+import * as React from 'react';
+import { User } from '../types/typeUtils';
+import ListItem from './ListItem';
 
-
-const List = ({ items }: { items: GetUsersResponse }) => (
+const List = ({ items }: { items: User[] }) => (
   <ul>
     {items.map((item) => (
       <li key={item.id}>
@@ -11,6 +10,6 @@ const List = ({ items }: { items: GetUsersResponse }) => (
       </li>
     ))}
   </ul>
-)
+);
 
-export default List
+export default List;

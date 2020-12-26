@@ -1,10 +1,10 @@
-import React from 'react'
-import { GetUsersResponse } from '../pages/api/users'
+import React from 'react';
+import { User } from '../types/typeUtils';
 
-const ListItem = ({ data }: { data: GetUsersResponse[number] }) => (
+const ListItem = ({ data }: { data: Pick<User, 'id' | 'name'> }) => (
   <>
     {data.id}: {data.name}
   </>
-)
+);
 
-export default ListItem
+export default ListItem;

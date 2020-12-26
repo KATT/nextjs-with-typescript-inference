@@ -1,6 +1,6 @@
 import { useRouter } from 'next/dist/client/router';
 import Link from 'next/link';
-import { ReactNode, ReactNodeArray } from 'react';
+import { ReactNode } from 'react';
 
 const routes: [string, string][] = [
   ['/', 'Home'],
