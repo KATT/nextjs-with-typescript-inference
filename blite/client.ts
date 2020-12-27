@@ -1,7 +1,7 @@
 import sj from 'superjson';
 import useSWR from 'swr';
 import { TResponseShape } from './server';
-import { BliteError } from './shared';
+import { BliteError } from './BliteError';
 
 export async function jsonPost<TBody, TResponseData = unknown>(opts: {
   body: TBody;

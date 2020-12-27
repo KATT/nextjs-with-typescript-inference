@@ -7,7 +7,6 @@ import {
   createUserSchema,
   createUserSchemaType,
 } from '../../types/schemas';
-import * as zod from 'zod';
 import { User } from '../../types/typeUtils';
 
 const DB = {
