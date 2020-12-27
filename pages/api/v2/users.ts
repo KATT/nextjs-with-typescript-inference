@@ -1,6 +1,6 @@
-import { createAPIHandler } from '../../../blite/server';
+import { apiQueryHandler } from '../../../blite/server';
 
-export default createAPIHandler(async () => {
+export default apiQueryHandler(async () => {
   return {
     ok: true,
     data: {
