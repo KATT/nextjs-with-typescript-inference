@@ -1,10 +1,10 @@
 import { useRouter } from 'next/dist/client/router';
 import { Suspense, useState } from 'react';
-import { jsonPost, useAPI } from '../../blite/client';
+import { jsonPost, useAPI } from '../../blite/__legacy/client';
 import { PageContent, PageHeader } from '../../components/Layout';
 import NoSSR from '../../components/NoSSR';
 import { createUserSchemaType } from '../../types/schemas';
-import { User } from '../../types/typeUtils';
+import { User } from '../../types/User';
 
 function AddUserForm() {
   const router = useRouter();

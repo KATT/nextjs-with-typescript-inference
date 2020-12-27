@@ -7,14 +7,14 @@ import {
 } from 'next';
 import { serialize } from 'superjson';
 import { SuperJSONResult } from 'superjson/dist/types';
-import { FunctionThenArg } from '../types/typeUtils';
+import { FunctionThenArg } from '../../types/typeUtils';
 import { TErrorData } from './shared';
 assertOnServer('server.ts');
 
-export type TRequest = NextApiRequest;
-export type TResponse = ServerResponse;
+type TRequest = NextApiRequest;
+type TResponse = ServerResponse;
 
-export type RequestContext = {
+type RequestContext = {
   req: TRequest;
 };
 
@@ -46,7 +46,7 @@ function getError(err: ErrorWithExtras, defaultStatusCode = 500): TErrorData {
     statusCode: parseIntOrNull(err.statusCode) ?? defaultStatusCode,
   };
 }
-export type TResponseShape =
+type TResponseShape =
   | {
       ok: true;
       data: SuperJSONResult;
@@ -60,7 +60,7 @@ type TResponseResolver<TResponseData> = (
   ctx: RequestContext,
 ) => PromiseLike<TResolverResponse<TResponseData>>;
 
-export function endpointHandler<TResponseData>(
+function endpointHandler<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
 ) {
   assertOnServer('endpointHandler');
@@ -99,11 +99,11 @@ async function ssrHandler<TResponseData>(
   };
 }
 
-export type InferGetDataFunction<T extends Function> = TResponseResolver<
+type InferGetDataFunction<T extends Function> = TResponseResolver<
   FunctionThenArg<T>
 >;
 
-export function makeSSRFunctions<TResponseData>(
+function makeSSRFunctions<TResponseData>(
   resolve: TResponseResolver<TResponseData>,
 ) {
   assertOnServer();
@@ -117,7 +117,7 @@ export function makeSSRFunctions<TResponseData>(
   };
 }
 
-export function assertOnServer(desc?: string) {
+function assertOnServer(desc?: string) {
   if (typeof window !== 'undefined') {
     throw new Error(
       'Imported server-only functionality on client' + desc ? ` (${desc})` : '',
@@ -125,21 +125,21 @@ export function assertOnServer(desc?: string) {
   }
 }
 
-export interface EndpointSuccessResponse<TData> {
+interface EndpointSuccessResponse<TData> {
   ok: true;
   statusCode: number;
   data: TData;
 }
-export interface EndpointErrorResponse {
+interface EndpointErrorResponse {
   ok: false;
   statusCode: number;
   error: TErrorData;
 }
-export type EndpointResponseEnvelope<TData> =
+type EndpointResponseEnvelope<TData> =
   | EndpointSuccessResponse<TData>
   | EndpointErrorResponse;
 
-export type EndpointHandlerResponseEnvelope<TData> =
+type EndpointHandlerResponseEnvelope<TData> =
   | {
       ok: true;
       data: TData;
@@ -150,15 +150,13 @@ export type EndpointHandlerResponseEnvelope<TData> =
       statusCode?: number;
       error: TErrorData;
     };
-export type EndpointHandlerResponse<
-  TData
-> = EndpointHandlerResponseEnvelope<TData>;
+type EndpointHandlerResponse<TData> = EndpointHandlerResponseEnvelope<TData>;
 
-export type EndpointHandler<TData> = (
+type EndpointHandler<TData> = (
   ctx: RequestContext,
 ) => Promise<EndpointHandlerResponse<TData>>;
 
-export type EndpointResolver<TData> = (
+type EndpointResolver<TData> = (
   ctx: RequestContext,
 ) => Promise<EndpointResponseEnvelope<TData>>;
 
@@ -196,6 +194,7 @@ function getErrorData(
   }
   return res;
 }
+
 export function createAPIHandler<TData>(callback: EndpointHandler<TData>) {
   type ResponseEnvelope = EndpointResponseEnvelope<TData>;
   type ResolverResponse = FunctionThenArg<typeof callback>;

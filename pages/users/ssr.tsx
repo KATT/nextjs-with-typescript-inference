@@ -2,7 +2,7 @@ import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 import { useRouter } from 'next/dist/client/router';
 import { Suspense, useState } from 'react';
 import useSWR from 'swr';
-import { jsonPost, swrFetcher } from '../../blite/client';
+import { jsonPost, swrFetcher } from '../../blite/__legacy/client';
 import { PageContent, PageHeader } from '../../components/Layout';
 import NoSSR from '../../components/NoSSR';
 import { createUserSchemaType } from '../../types/schemas';

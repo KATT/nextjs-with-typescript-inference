@@ -1,10 +1,6 @@
-import { HttpError } from '../../../blite/BliteError';
-import { assertOnServer, createAPIHandler } from '../../../blite/server';
-
-assertOnServer('api endpoint');
+import { createAPIHandler } from '../../../blite/server';
 
 export default createAPIHandler(async () => {
-  throw new HttpError(400);
   return {
     ok: true,
     data: {

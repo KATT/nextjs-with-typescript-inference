@@ -1,5 +1,5 @@
 import { NextApiHandler } from 'next';
-import { FunctionThenArg } from '../types/typeUtils';
+import { FunctionThenArg } from '../../types/typeUtils';
 import { RequestContext } from './server';
 
 export function throwServerOnlyError(message: string): never {

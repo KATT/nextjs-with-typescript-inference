@@ -1,13 +1,13 @@
 // Mock db
 import { v4 } from 'uuid';
-import { assertOnServer } from '../../blite/server';
+import { assertOnServer } from '../../blite/__legacy/server';
 import {
   createPostSchema,
   createPostSchemaType,
   createUserSchema,
   createUserSchemaType,
 } from '../../types/schemas';
-import { User } from '../../types/typeUtils';
+import { User } from '../../types/User';
 
 const DB = {
   users: [

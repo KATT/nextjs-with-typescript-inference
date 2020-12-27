@@ -1,4 +1,7 @@
-import { endpointHandler, InferGetDataFunction } from '../../../blite/server';
+import {
+  endpointHandler,
+  InferGetDataFunction,
+} from '../../../blite/__legacy/server';
 import { createUser } from '../db';
 
 export const createUserResolver: InferGetDataFunction<

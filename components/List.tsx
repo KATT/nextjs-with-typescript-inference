@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { User } from '../types/typeUtils';
+import { User } from '../types/User';
 import ListItem from './ListItem';
 
 const List = ({ items }: { items: User[] }) => (
