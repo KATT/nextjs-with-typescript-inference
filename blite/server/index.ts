@@ -1,9 +1,15 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import {
+  GetServerSideProps,
+  GetServerSidePropsContext,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
 import { FunctionThenArg } from '../../types/typeUtils';
 import * as z from 'zod';
 import { ZodRawShape } from 'zod/lib/src/types/base';
 import { ZodError } from 'zod';
 import { IncomingMessage } from 'http';
+import { HttpError } from 'blite/universal';
 assertOnServer('server.ts');
 // shared
 export interface TErrorData {
@@ -56,6 +62,7 @@ type EndpointHandlerResponseEnvelope<TResolverData> =
       statusCode?: number;
       error: TErrorData;
     };
+
 // query
 interface QueryEndpointSuccessResponse<TResolverData> {
   ok: true;
@@ -254,4 +261,16 @@ export function apiMutationHandler<
     }
   };
   return handler;
+}
+
+// ssr response
+export async function getServerSidePropsHelper<TData>(
+  ctx: GetServerSidePropsContext,
+  handler: (req: TRequest) => Promise<QueryResponseEnvelope<TData>>,
+) {
+  const res = await handler(ctx.req);
+  if (res.ok) {
+    return res.data;
+  }
+  throw new HttpError(res.statusCode);
 }
