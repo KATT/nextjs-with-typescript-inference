@@ -5,7 +5,6 @@ import {
   NextApiRequest,
   NextApiResponse,
 } from 'next';
-import { env } from 'process';
 import { serialize } from 'superjson';
 import { SuperJSONResult } from 'superjson/dist/types';
 import { FunctionThenArg } from '../types/typeUtils';
