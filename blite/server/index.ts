@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { FunctionThenArg } from '../../types/typeUtils';
 import * as z from 'zod';
 import { ZodRawShape } from 'zod/lib/src/types/base';
+import { ZodError } from 'zod';
+import { IncomingMessage } from 'http';
 assertOnServer('server.ts');
 // shared
 export interface TErrorData {
@@ -10,11 +12,13 @@ export interface TErrorData {
   stack?: string;
 }
 
-type TRequest = NextApiRequest;
-
-type QueryHandlerContext = {
-  req: TRequest;
+type TRequest = IncomingMessage & {
+  cookies?: { [key: string]: any };
 };
+
+interface QueryHandlerContext {
+  req: TRequest;
+}
 
 type ErrorWithExtras = Error & {
   statusCode?: unknown;
@@ -75,27 +79,6 @@ type QueryEndpointHandler<TResolverData> = (
   ctx: QueryHandlerContext,
 ) => Promise<QueryEndpointHandlerResponse<TResolverData>>;
 
-function getAsEnvelope<TResolverData>(
-  val: QueryEndpointHandlerResponse<TResolverData>,
-): EndpointHandlerResponseEnvelope<TResolverData> {
-  const envelope = val as EndpointHandlerResponseEnvelope<TResolverData>;
-  if (
-    // check if the response is an envelope
-    envelope &&
-    typeof envelope === 'object' &&
-    envelope &&
-    !Array.isArray(envelope) &&
-    typeof envelope.ok === 'boolean' &&
-    'data' in envelope
-  ) {
-    return envelope;
-  }
-  return {
-    ok: true,
-    data: (val as unknown) as TResolverData,
-  };
-}
-
 function getErrorData(
   err: ErrorWithExtras,
   defaultStatusCode = 500,
@@ -113,12 +96,12 @@ function getErrorData(
 export function apiQueryHandler<TResolverData>(
   callback: QueryEndpointHandler<TResolverData>,
 ) {
-  type TQueryResponseEnvelope = QueryResponseEnvelope<TResolverData>;
+  type THandlerRequestEnvelope = QueryResponseEnvelope<TResolverData>;
   type TQueryResolverResponse = FunctionThenArg<typeof callback>;
-  function getResponseEnvelopeFromResolverResult(
+  function getEnvelope(
     result: TQueryResolverResponse,
-  ): TQueryResponseEnvelope {
-    const envelope = getAsEnvelope<TResolverData>(result);
+  ): THandlerRequestEnvelope {
+    const envelope = result;
 
     if (envelope.ok) {
       // resolved ok
@@ -136,16 +119,12 @@ export function apiQueryHandler<TResolverData>(
     };
   }
   const handler = async (
-    req: NextApiRequest,
-    res: NextApiResponse<TQueryResponseEnvelope>,
-  ): Promise<TQueryResponseEnvelope> => {
+    req: TRequest,
+    res?: NextApiResponse<THandlerRequestEnvelope>,
+  ): Promise<THandlerRequestEnvelope> => {
     try {
-      const ctx = {
-        req,
-        res,
-      };
-      const result = getResponseEnvelopeFromResolverResult(await callback(ctx));
-      res.status(result.statusCode).send(result);
+      const result = getEnvelope(await callback({ req }));
+      res?.status(result.statusCode).send(result);
       return result;
     } catch (_err) {
       // threw error
@@ -155,7 +134,7 @@ export function apiQueryHandler<TResolverData>(
         statusCode: error.statusCode,
         error,
       };
-      res.status(result.statusCode).json(result);
+      res?.status(result.statusCode).json(result);
       return result;
     }
   };
@@ -201,25 +180,78 @@ export function apiMutationHandler<
     TResolverData,
     TValues
   >;
-
   type TMutationEndpointHandlerConext = MutationEndpointHandlerContext<TValues>;
+  type TResolverResponse = FunctionThenArg<typeof callback>;
+  type TMutationRequestEnvelope = MutationResponseEnvelope<
+    TResolverData,
+    TValues
+  >;
+
+  function getEnvelope(
+    result: TResolverResponse,
+    ctx: TMutationEndpointHandlerConext,
+  ): TMutationRequestEnvelope {
+    const envelope = result;
+
+    if (envelope.ok) {
+      // resolved ok
+      const { data, statusCode = 200 } = envelope;
+      return {
+        ok: true,
+        statusCode,
+        input: ctx.input,
+        data,
+      };
+    }
+    return {
+      input: ctx.input,
+      ok: false,
+      statusCode: envelope.statusCode ?? 500,
+      error: envelope.error,
+    };
+  }
 
   const handler = async (
     req: NextApiRequest,
     res: NextApiResponse<TMutationResponseEnvelope>,
   ): Promise<TMutationResponseEnvelope> => {
-    const parsed = schema.safeParse(req.body);
+    const input = req.body;
     try {
+      const parsed = schema.safeParse(input);
       if (parsed.success) {
         const ctx: TMutationEndpointHandlerConext = {
           req,
-          input: parsed.data,
+          input,
         };
-        const res = await callback(ctx);
+        const result = await callback(ctx);
+        const envelope = getEnvelope(result, ctx);
+        res.status(envelope.statusCode).send(envelope);
+        return envelope;
       }
-    } catch (err) {}
-
-    throw new Error('Unimplemented');
+      throw parsed.error;
+    } catch (err) {
+      if (err instanceof ZodError) {
+        // validation error
+        const envelope: TMutationResponseEnvelope = {
+          ok: false,
+          statusCode: 400,
+          input,
+          error: getErrorData(err),
+        };
+        res.status(400).send(envelope);
+        return envelope;
+      }
+      // some other error
+      const error = getErrorData(err);
+      const envelope: TMutationResponseEnvelope = {
+        ok: false,
+        statusCode: error.statusCode,
+        input,
+        error,
+      };
+      res.status(400).send(envelope);
+      return envelope;
+    }
   };
   return handler;
 }

@@ -9,6 +9,7 @@ const routes: [string, string][] = [
   ['/users/ssr', 'SSR'],
   ['/playground', 'Playground'],
   ['/posts', 'Form'],
+  ['/users-new', 'v2'],
 ];
 export const Header = () => {
   const router = useRouter();
