@@ -1,26 +1,18 @@
-import { ServerResponse } from 'http';
-import {
-  GetServerSidePropsContext,
-  NextApiHandler,
-  NextApiRequest,
-  NextApiResponse,
-} from 'next';
-import { serialize } from 'superjson';
-import { SuperJSONResult } from 'superjson/dist/types';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { FunctionThenArg } from '../../types/typeUtils';
-import { TErrorData } from './shared';
+
 assertOnServer('server.ts');
 
+export interface TErrorData {
+  statusCode: number;
+  message: string;
+  stack?: string;
+}
+
 type TRequest = NextApiRequest;
-type TResponse = ServerResponse;
 
 type RequestContext = {
   req: TRequest;
-};
-
-type TResolverResponse<TResponseData> = {
-  statusCode?: number;
-  data: TResponseData;
 };
 
 type ErrorWithExtras = Error & {
@@ -38,83 +30,6 @@ function parseIntOrNull(input: unknown) {
     return num;
   }
   return null;
-}
-
-function getError(err: ErrorWithExtras, defaultStatusCode = 500): TErrorData {
-  return {
-    message: err.message,
-    statusCode: parseIntOrNull(err.statusCode) ?? defaultStatusCode,
-  };
-}
-type TResponseShape =
-  | {
-      ok: true;
-      data: SuperJSONResult;
-    }
-  | {
-      ok: false;
-      error: TErrorData;
-    };
-
-type TResponseResolver<TResponseData> = (
-  ctx: RequestContext,
-) => PromiseLike<TResolverResponse<TResponseData>>;
-
-function endpointHandler<TResponseData>(
-  resolve: TResponseResolver<TResponseData>,
-) {
-  assertOnServer('endpointHandler');
-  const handler: NextApiHandler<TResponseShape> = async (req, res) => {
-    try {
-      const ctx = {
-        req,
-        res,
-      };
-
-      const { data, statusCode = 200 } = await resolve(ctx);
-      // res.setHeader('cache-control', 's-maxage=60, stale-while-revalidate');
-      res.status(statusCode).json({ ok: true, data: serialize(data) });
-    } catch (_err) {
-      const error = getError(_err, 500);
-      res.status(error.statusCode).json({
-        ok: false,
-        error,
-      });
-    }
-  };
-
-  return handler;
-}
-
-async function ssrHandler<TResponseData>(
-  resolve: TResponseResolver<TResponseData>,
-  ctx: RequestContext,
-) {
-  const { data } = await resolve(ctx);
-
-  return {
-    props: {
-      data,
-    },
-  };
-}
-
-type InferGetDataFunction<T extends Function> = TResponseResolver<
-  FunctionThenArg<T>
->;
-
-function makeSSRFunctions<TResponseData>(
-  resolve: TResponseResolver<TResponseData>,
-) {
-  assertOnServer();
-  return {
-    async getServerSideProps(ctx: GetServerSidePropsContext) {
-      return ssrHandler(resolve, {
-        req: ctx.req as any, // fixme,
-      });
-    },
-    resolve,
-  };
 }
 
 function assertOnServer(desc?: string) {
@@ -155,10 +70,6 @@ type EndpointHandlerResponse<TData> = EndpointHandlerResponseEnvelope<TData>;
 type EndpointHandler<TData> = (
   ctx: RequestContext,
 ) => Promise<EndpointHandlerResponse<TData>>;
-
-type EndpointResolver<TData> = (
-  ctx: RequestContext,
-) => Promise<EndpointResponseEnvelope<TData>>;
 
 function getAsEnvelope<TData>(
   val: EndpointHandlerResponse<TData>,
@@ -245,3 +156,26 @@ export function createAPIHandler<TData>(callback: EndpointHandler<TData>) {
   };
   return handler;
 }
+
+// export function createAPIMutationHandler<
+//   TSchema extends z.ZodObject<TSchemaShape>,
+//   TSchemaShape extends ZodRawShape,
+//   TData
+// >({ schema, callback }: { schema: TSchema; callback: EndpointHandler<TData> }) {
+//   type TValues = z.infer<TSchema>;
+//   type ResponseEnvelope = EndpointResponseEnvelope<TData>;
+
+//   const handler = async (
+//     req: NextApiRequest,
+//     res: NextApiResponse<ResponseEnvelope>,
+//   ): Promise<ResponseEnvelope> => {
+//     const ctx = {
+//       req,
+//       res,
+//     };
+//     const input = schema.safeParse(ctx.req.body);
+//     if (input.success) {
+//     }
+//   };
+//   return handler;
+// }
